@@ -4,22 +4,22 @@ export async function POST(req: Request) {
   try {
     const { message } = await req.json();
 
-    const API_KEY = process.env.GROQ_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
 
-    if (!API_KEY) {
+    if (!apiKey) {
       return NextResponse.json(
-        { reply: "Missing Groq API key" },
+        { reply: "Missing GROQ_API_KEY" },
         { status: 500 }
       );
     }
 
-    const res = await fetch(
+    const groqRes = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${API_KEY}`,
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: "llama-3.3-70b-versatile",
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
             {
               role: "system",
               content:
-                "You are a Heat Transfer Expert. Explain conduction, convection, radiation, insulation, and R-values clearly.",
+                "You are a Heat Transfer expert. Explain conduction, convection, radiation, insulation and R-values simply.",
             },
             {
               role: "user",
@@ -39,22 +39,24 @@ export async function POST(req: Request) {
       }
     );
 
-    if (!res.ok) {
-      const errText = await res.text();
+    if (!groqRes.ok) {
+      const err = await groqRes.text();
       return NextResponse.json(
-        { reply: `Groq API error: ${errText}` },
+        { reply: "Groq API error", error: err },
         { status: 500 }
       );
     }
 
-    const data = await res.json();
+    const data = await groqRes.json();
 
-    return NextResponse.json({
-      reply: data.choices?.[0]?.message?.content ?? "No response generated.",
-    });
-  } catch (error) {
+    const reply =
+      data?.choices?.[0]?.message?.content ??
+      "No response generated.";
+
+    return NextResponse.json({ reply });
+  } catch (err) {
     return NextResponse.json(
-      { reply: "Groq server error." },
+      { reply: "Server error" },
       { status: 500 }
     );
   }
