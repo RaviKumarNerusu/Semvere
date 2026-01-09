@@ -17,7 +17,6 @@ export default function HeatAssistant() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMounted(true), []);
-
   useEffect(() => {
     scrollRef.current?.scrollTo({
       top: scrollRef.current.scrollHeight,
@@ -61,7 +60,7 @@ export default function HeatAssistant() {
         const copy = [...prev];
         copy[copy.length - 1] = {
           role: "assistant",
-          text: "Groq connection error.",
+          text: "Connection error. Please try again.",
         };
         return copy;
       });
@@ -75,16 +74,16 @@ export default function HeatAssistant() {
         onClick={() => setIsOpen(true)}
         style={{
           position: "fixed",
-          bottom: 20,
-          right: 20,
+          bottom: 24,
+          right: 24,
           width: 64,
           height: 64,
           borderRadius: "50%",
           background: "#fff",
-          boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
-          zIndex: 9999,
           border: "2px solid #d35400",
+          boxShadow: "0 8px 24px rgba(0,0,0,.25)",
           cursor: "pointer",
+          zIndex: 9999,
         }}
       >
         <img
@@ -103,12 +102,11 @@ export default function HeatAssistant() {
           width: 360,
           height: "100vh",
           background: "#fff",
-          boxShadow: "-10px 0 25px rgba(0,0,0,0.2)",
-          transition: "right 0.3s ease",
+          boxShadow: "-10px 0 25px rgba(0,0,0,.2)",
+          transition: "right .3s ease",
           zIndex: 10000,
           display: "flex",
           flexDirection: "column",
-          overflow: "hidden",
         }}
       >
         {/* Header */}
@@ -123,10 +121,7 @@ export default function HeatAssistant() {
           }}
         >
           <span>Thermal Guide AI (Groq)</span>
-          <span
-            style={{ cursor: "pointer" }}
-            onClick={() => setIsOpen(false)}
-          >
+          <span style={{ cursor: "pointer" }} onClick={() => setIsOpen(false)}>
             ✕
           </span>
         </div>
@@ -153,20 +148,18 @@ export default function HeatAssistant() {
                 padding: 10,
                 borderRadius: 12,
               }}
-              dangerouslySetInnerHTML={{
-                __html: marked.parse(m.text),
-              }}
+              dangerouslySetInnerHTML={{ __html: marked.parse(m.text) }}
             />
           ))}
         </div>
 
-        {/* Input Bar (FIXED) */}
+        {/* Input Bar */}
         <div
           style={{
             padding: 12,
-            borderTop: "1px solid #ddd",
+            borderTop: "1px solid #e5e5e5",
             display: "flex",
-            gap: 8,
+            gap: 10,
             background: "#fff",
           }}
         >
@@ -177,22 +170,25 @@ export default function HeatAssistant() {
             placeholder="Ask about thermal flows..."
             style={{
               flex: 1,
-              padding: "10px 14px",
-              borderRadius: 20,
+              height: 44,
+              padding: "0 16px",
+              borderRadius: 22,
               border: "1px solid #ccc",
               outline: "none",
+              fontSize: 14,
             }}
           />
           <button
             onClick={sendMessage}
             style={{
+              height: 44,
+              padding: "0 18px",
+              borderRadius: 22,
               background: "#d35400",
               color: "#fff",
               border: "none",
-              padding: "10px 18px",
-              borderRadius: 20,
+              fontWeight: 600,
               cursor: "pointer",
-              fontWeight: "bold",
             }}
           >
             Send
