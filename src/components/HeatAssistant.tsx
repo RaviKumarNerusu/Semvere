@@ -3,16 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { marked } from "marked";
 
-type Message = {
-  role: "user" | "bot";
-  text: string;
-};
-
 export default function HeatAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Message[]>([
+  const [messages, setMessages] = useState([
     {
       role: "bot",
       text: "Hi! I'm your Heat Transfer Assistant. How can I help you today?",
@@ -21,27 +16,26 @@ export default function HeatAssistant() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    scrollRef.current?.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: "smooth",
+    });
   }, [messages]);
 
   if (!mounted) return null;
 
-  const sendMessage = async () => {
+  async function sendMessage() {
     if (!input.trim()) return;
 
     const userText = input;
     setInput("");
 
-    setMessages((prev) => [...prev, { role: "user", text: userText }]);
     setMessages((prev) => [
       ...prev,
+      { role: "user", text: userText },
       { role: "bot", text: "Analyzing thermal properties..." },
     ]);
 
@@ -55,85 +49,76 @@ export default function HeatAssistant() {
       const data = await res.json();
 
       setMessages((prev) => {
-        const updated = [...prev];
-        updated[updated.length - 1] = {
+        const copy = [...prev];
+        copy[copy.length - 1] = {
           role: "bot",
-          text: data.reply || "No response received.",
+          text: data.reply ?? "No response from server.",
         };
-        return updated;
+        return copy;
       });
     } catch {
       setMessages((prev) => {
-        const updated = [...prev];
-        updated[updated.length - 1] = {
+        const copy = [...prev];
+        copy[copy.length - 1] = {
           role: "bot",
           text: "Server communication error.",
         };
-        return updated;
+        return copy;
       });
     }
-  };
+  }
 
   return (
-    <div style={{ color: "#333" }}>
+    <>
       {/* Floating Button */}
       <div
         onClick={() => setIsOpen(!isOpen)}
         style={{
           position: "fixed",
-          bottom: "25px",
-          right: "25px",
-          width: "65px",
-          height: "65px",
-          background: "white",
+          bottom: 24,
+          right: 24,
+          width: 64,
+          height: 64,
           borderRadius: "50%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          background: "#fff",
           cursor: "pointer",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.3)",
+          boxShadow: "0 8px 24px rgba(0,0,0,.25)",
           zIndex: 9999,
-          overflow: "hidden",
-          border: "2px solid #d35400",
         }}
       >
         <img
           src="/bot-icon.png"
-          alt="Heat Assistant"
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          alt="Assistant"
+          style={{ width: "100%", height: "100%", borderRadius: "50%" }}
         />
       </div>
 
-      {/* Chat Panel */}
+      {/* Sidebar */}
       <div
         style={{
           position: "fixed",
           top: 0,
-          right: isOpen ? 0 : "-400px",
-          width: "350px",
+          right: isOpen ? 0 : "-360px",
+          width: 360,
           height: "100%",
-          background: "white",
-          boxShadow: "-10px 0 20px rgba(0,0,0,0.1)",
+          background: "#fff",
+          transition: "0.3s",
+          zIndex: 10000,
           display: "flex",
           flexDirection: "column",
-          transition: "0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          zIndex: 10000,
         }}
       >
         <div
           style={{
             background: "#d35400",
-            color: "white",
-            padding: "15px",
+            color: "#fff",
+            padding: 14,
             fontWeight: "bold",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
           }}
         >
-          <span>Thermal Guide AI</span>
+          Thermal Guide AI
           <span
-            style={{ cursor: "pointer", fontSize: "24px" }}
+            style={{ float: "right", cursor: "pointer" }}
             onClick={() => setIsOpen(false)}
           >
             ✕
@@ -142,77 +127,46 @@ export default function HeatAssistant() {
 
         <div
           ref={scrollRef}
-          style={{
-            flex: 1,
-            padding: "15px",
-            overflowY: "auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-          }}
+          style={{ flex: 1, overflowY: "auto", padding: 12 }}
         >
-          {messages.map((msg, i) => (
+          {messages.map((m, i) => (
             <div
               key={i}
               style={{
-                padding: "10px",
-                borderRadius: "12px",
+                marginBottom: 10,
+                alignSelf: m.role === "user" ? "flex-end" : "flex-start",
+                background: m.role === "user" ? "#e67e22" : "#f1f1f1",
+                color: m.role === "user" ? "#fff" : "#000",
+                padding: 10,
+                borderRadius: 10,
                 maxWidth: "85%",
-                fontSize: "14px",
-                lineHeight: "1.5",
-                alignSelf:
-                  msg.role === "user" ? "flex-end" : "flex-start",
-                background:
-                  msg.role === "user" ? "#e67e22" : "#f1f3f4",
-                color: msg.role === "user" ? "white" : "#333",
               }}
-            >
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: String(marked.parse(msg.text)),
-                }}
-              />
-            </div>
+              dangerouslySetInnerHTML={{ __html: marked.parse(m.text) }}
+            />
           ))}
         </div>
 
-        <div
-          style={{
-            padding: "15px",
-            borderTop: "1px solid #eee",
-            display: "flex",
-            gap: "8px",
-          }}
-        >
+        <div style={{ padding: 10, display: "flex", gap: 6 }}>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             placeholder="Ask about heat transfer..."
-            style={{
-              flex: 1,
-              padding: "12px",
-              border: "1px solid #ddd",
-              borderRadius: "25px",
-              outline: "none",
-            }}
+            style={{ flex: 1, padding: 10, borderRadius: 20 }}
           />
           <button
             onClick={sendMessage}
             style={{
               background: "#d35400",
-              color: "white",
-              border: "none",
-              padding: "10px 18px",
-              borderRadius: "25px",
-              cursor: "pointer",
-              fontWeight: "bold",
+              color: "#fff",
+              padding: "8px 16px",
+              borderRadius: 20,
             }}
           >
             Send
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }
