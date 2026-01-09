@@ -8,12 +8,12 @@ export async function POST(req: Request) {
 
     if (!API_KEY) {
       return NextResponse.json(
-        { reply: "❌ Missing GROQ_API_KEY in environment variables." },
+        { reply: "Missing Groq API key" },
         { status: 500 }
       );
     }
 
-    const groqRes = await fetch(
+    const res = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
       {
         method: "POST",
@@ -27,30 +27,34 @@ export async function POST(req: Request) {
             {
               role: "system",
               content:
-                "You are a Heat Transfer expert. Explain conduction, convection, radiation, insulation, R-values clearly for students.",
+                "You are a Heat Transfer Expert. Explain conduction, convection, radiation, insulation, and R-values clearly.",
             },
-            { role: "user", content: message },
+            {
+              role: "user",
+              content: message,
+            },
           ],
           temperature: 0.6,
         }),
       }
     );
 
-    const data = await groqRes.json();
-
-    if (!data?.choices?.[0]?.message?.content) {
+    if (!res.ok) {
+      const errText = await res.text();
       return NextResponse.json(
-        { reply: "⚠️ No response from Groq API." },
+        { reply: `Groq API error: ${errText}` },
         { status: 500 }
       );
     }
 
+    const data = await res.json();
+
     return NextResponse.json({
-      reply: data.choices[0].message.content,
+      reply: data.choices?.[0]?.message?.content ?? "No response generated.",
     });
-  } catch (err) {
+  } catch (error) {
     return NextResponse.json(
-      { reply: "❌ Groq connection error." },
+      { reply: "Groq server error." },
       { status: 500 }
     );
   }
