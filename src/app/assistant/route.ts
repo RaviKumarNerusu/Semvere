@@ -4,33 +4,37 @@ export async function POST(req: Request) {
   try {
     const { message } = await req.json();
 
-    const API_KEY = process.env.GEMINI_API_KEY;
+    const API_KEY = process.env.GROQ_API_KEY;
 
     if (!API_KEY) {
       return NextResponse.json(
-        { error: "Missing API key" },
+        { reply: "Missing Groq API key" },
         { status: 500 }
       );
     }
 
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
+      "https://api.groq.com/openai/v1/chat/completions",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API_KEY}`,
+        },
         body: JSON.stringify({
-          contents: [
+          model: "llama-3.3-70b-versatile",
+          messages: [
             {
-              parts: [
-                {
-                  text: `You are a Heat Transfer Expert.
-Explain conduction, convection, radiation, insulation, R-values.
-
-User Question: ${message}`,
-                },
-              ],
+              role: "system",
+              content:
+                "You are a Heat Transfer Expert. Explain conduction, convection, radiation, insulation, and R-values clearly.",
+            },
+            {
+              role: "user",
+              content: message,
             },
           ],
+          temperature: 0.6,
         }),
       }
     );
@@ -38,13 +42,13 @@ User Question: ${message}`,
     const data = await res.json();
 
     const reply =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ??
-      "I couldn't generate a response.";
+      data?.choices?.[0]?.message?.content ??
+      "No response generated.";
 
     return NextResponse.json({ reply });
   } catch (error) {
     return NextResponse.json(
-      { error: "Assistant failed" },
+      { reply: "Groq server error." },
       { status: 500 }
     );
   }
