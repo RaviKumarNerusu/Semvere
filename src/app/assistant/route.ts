@@ -5,7 +5,6 @@ export async function POST(req: Request) {
     const { message } = await req.json();
 
     const API_KEY = process.env.GROQ_API_KEY;
-
     if (!API_KEY) {
       return NextResponse.json(
         { reply: "Missing Groq API key" },
@@ -29,18 +28,22 @@ export async function POST(req: Request) {
               content:
                 "You are a Heat Transfer Expert. Explain conduction, convection, radiation, insulation, and R-values clearly.",
             },
-            {
-              role: "user",
-              content: message,
-            },
+            { role: "user", content: message },
           ],
           temperature: 0.6,
         }),
       }
     );
 
-    const data = await res.json();
+    if (!res.ok) {
+      const err = await res.text();
+      return NextResponse.json(
+        { reply: "Groq API error", error: err },
+        { status: 500 }
+      );
+    }
 
+    const data = await res.json();
     const reply =
       data?.choices?.[0]?.message?.content ??
       "No response generated.";
@@ -48,7 +51,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ reply });
   } catch (error) {
     return NextResponse.json(
-      { reply: "Groq server error." },
+      { reply: "Server error while contacting Groq." },
       { status: 500 }
     );
   }
