@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { marked } from "marked";
 
 type Message = {
-  role: "user" | "bot";
+  role: "user" | "assistant";
   text: string;
 };
 
@@ -14,16 +14,14 @@ export default function HeatAssistant() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     {
-      role: "bot",
-      text: "Hi! I'm your Heat Transfer Assistant. How can I help you today?",
+      role: "assistant",
+      text: "Hi! I'm your Heat Transfer Assistant. How can I help with your simulation?",
     },
   ]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -43,7 +41,7 @@ export default function HeatAssistant() {
     setMessages((prev) => [
       ...prev,
       { role: "user", text: userText },
-      { role: "bot", text: "Analyzing thermal properties..." },
+      { role: "assistant", text: "Calculating thermal flow..." },
     ]);
 
     try {
@@ -58,17 +56,17 @@ export default function HeatAssistant() {
       setMessages((prev) => {
         const copy = [...prev];
         copy[copy.length - 1] = {
-          role: "bot",
-          text: data.reply || "No response from server.",
+          role: "assistant",
+          text: data.reply || "No response from Groq.",
         };
         return copy;
       });
-    } catch (error) {
+    } catch {
       setMessages((prev) => {
         const copy = [...prev];
         copy[copy.length - 1] = {
-          role: "bot",
-          text: "Server communication error.",
+          role: "assistant",
+          text: "Groq connection error.",
         };
         return copy;
       });
@@ -87,17 +85,16 @@ export default function HeatAssistant() {
           width: 64,
           height: 64,
           borderRadius: "50%",
-          background: "#ffffff",
-          cursor: "pointer",
+          background: "#fff",
           boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+          cursor: "pointer",
           zIndex: 9999,
-          overflow: "hidden",
         }}
       >
         <img
           src="/bot-icon.png"
-          alt="Assistant"
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          alt="Bot"
+          style={{ width: "100%", height: "100%", borderRadius: "50%" }}
         />
       </div>
 
@@ -109,103 +106,67 @@ export default function HeatAssistant() {
           right: isOpen ? 0 : "-360px",
           width: 360,
           height: "100%",
-          background: "#ffffff",
-          transition: "right 0.3s ease",
+          background: "#fff",
+          transition: "0.3s",
           zIndex: 10000,
           display: "flex",
           flexDirection: "column",
-          boxShadow: "-8px 0 24px rgba(0,0,0,0.15)",
         }}
       >
-        {/* Header */}
         <div
           style={{
             background: "#d35400",
-            color: "#ffffff",
+            color: "#fff",
             padding: 14,
             fontWeight: "bold",
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center",
           }}
         >
-          Thermal Guide AI
-          <span
-            style={{ cursor: "pointer", fontSize: 18 }}
-            onClick={() => setIsOpen(false)}
-          >
+          Thermal Guide AI (Groq)
+          <span style={{ cursor: "pointer" }} onClick={() => setIsOpen(false)}>
             ✕
           </span>
         </div>
 
-        {/* Messages */}
-        <div
-          ref={scrollRef}
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            padding: 12,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
+        <div ref={scrollRef} style={{ flex: 1, padding: 12, overflowY: "auto" }}>
           {messages.map((m, i) => (
             <div
               key={i}
               style={{
                 marginBottom: 10,
-                alignSelf: m.role === "user" ? "flex-end" : "flex-start",
-                background: m.role === "user" ? "#e67e22" : "#f1f1f1",
-                color: m.role === "user" ? "#ffffff" : "#000000",
-                padding: "10px 12px",
+                background: m.role === "user" ? "#e67e22" : "#f1f3f4",
+                color: m.role === "user" ? "#fff" : "#333",
+                padding: 10,
                 borderRadius: 12,
                 maxWidth: "85%",
-                fontSize: 14,
-                lineHeight: 1.5,
+                alignSelf: m.role === "user" ? "flex-end" : "flex-start",
               }}
-              dangerouslySetInnerHTML={{
-                __html: marked.parse(m.text),
-              }}
+              dangerouslySetInnerHTML={{ __html: marked.parse(m.text) }}
             />
           ))}
         </div>
 
-        {/* INPUT BAR (FIXED & VISIBLE) */}
-        <div
-          style={{
-            padding: 12,
-            display: "flex",
-            gap: 8,
-            borderTop: "1px solid #eee",
-            background: "#fafafa",
-          }}
-        >
+        <div style={{ padding: 12, display: "flex", gap: 8 }}>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Ask about heat transfer..."
+            placeholder="Ask about thermal flows..."
             style={{
               flex: 1,
-              padding: "12px 16px",
+              padding: 12,
               borderRadius: 20,
               border: "1px solid #ccc",
-              outline: "none",
-              fontSize: 14,
-              background: "#ffffff",
-              color: "#000000",
             }}
           />
           <button
             onClick={sendMessage}
             style={{
               background: "#d35400",
-              color: "#ffffff",
-              padding: "10px 18px",
+              color: "#fff",
+              padding: "10px 16px",
               borderRadius: 20,
-              fontWeight: "bold",
-              cursor: "pointer",
-              border: "none",
             }}
           >
             Send
