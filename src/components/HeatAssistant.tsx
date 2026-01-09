@@ -3,16 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { marked } from "marked";
 
-type Message = {
-  role: "user" | "assistant";
-  text: string;
-};
-
 export default function HeatAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Message[]>([
+  const [messages, setMessages] = useState([
     {
       role: "assistant",
       text: "Hi! I'm your Heat Transfer Assistant. How can I help with your simulation?",
@@ -57,7 +52,7 @@ export default function HeatAssistant() {
         const copy = [...prev];
         copy[copy.length - 1] = {
           role: "assistant",
-          text: data.reply || "No response from Groq.",
+          text: data.reply ?? "No response generated.",
         };
         return copy;
       });
@@ -76,78 +71,105 @@ export default function HeatAssistant() {
   return (
     <>
       {/* Floating Button */}
-      <div
-        onClick={() => setIsOpen(!isOpen)}
+      <button
+        onClick={() => setIsOpen(true)}
         style={{
           position: "fixed",
-          bottom: 24,
-          right: 24,
+          bottom: 20,
+          right: 20,
           width: 64,
           height: 64,
           borderRadius: "50%",
           background: "#fff",
           boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
-          cursor: "pointer",
           zIndex: 9999,
+          border: "2px solid #d35400",
+          cursor: "pointer",
         }}
       >
         <img
           src="/bot-icon.png"
-          alt="Bot"
+          alt="Assistant"
           style={{ width: "100%", height: "100%", borderRadius: "50%" }}
         />
-      </div>
+      </button>
 
       {/* Sidebar */}
       <div
         style={{
           position: "fixed",
           top: 0,
-          right: isOpen ? 0 : "-360px",
+          right: isOpen ? 0 : "-380px",
           width: 360,
-          height: "100%",
+          height: "100vh",
           background: "#fff",
-          transition: "0.3s",
+          boxShadow: "-10px 0 25px rgba(0,0,0,0.2)",
+          transition: "right 0.3s ease",
           zIndex: 10000,
           display: "flex",
           flexDirection: "column",
+          overflow: "hidden",
         }}
       >
+        {/* Header */}
         <div
           style={{
             background: "#d35400",
             color: "#fff",
-            padding: 14,
+            padding: "14px 16px",
             fontWeight: "bold",
             display: "flex",
             justifyContent: "space-between",
           }}
         >
-          Thermal Guide AI (Groq)
-          <span style={{ cursor: "pointer" }} onClick={() => setIsOpen(false)}>
+          <span>Thermal Guide AI (Groq)</span>
+          <span
+            style={{ cursor: "pointer" }}
+            onClick={() => setIsOpen(false)}
+          >
             ✕
           </span>
         </div>
 
-        <div ref={scrollRef} style={{ flex: 1, padding: 12, overflowY: "auto" }}>
+        {/* Messages */}
+        <div
+          ref={scrollRef}
+          style={{
+            flex: 1,
+            padding: 14,
+            overflowY: "auto",
+            background: "#fafafa",
+          }}
+        >
           {messages.map((m, i) => (
             <div
               key={i}
               style={{
                 marginBottom: 10,
-                background: m.role === "user" ? "#e67e22" : "#f1f3f4",
-                color: m.role === "user" ? "#fff" : "#333",
-                padding: 10,
-                borderRadius: 12,
                 maxWidth: "85%",
                 alignSelf: m.role === "user" ? "flex-end" : "flex-start",
+                background: m.role === "user" ? "#e67e22" : "#f1f1f1",
+                color: m.role === "user" ? "#fff" : "#000",
+                padding: 10,
+                borderRadius: 12,
               }}
-              dangerouslySetInnerHTML={{ __html: marked.parse(m.text) }}
+              dangerouslySetInnerHTML={{
+                __html: marked.parse(m.text),
+              }}
             />
           ))}
         </div>
 
-        <div style={{ padding: 12, display: "flex", gap: 8 }}>
+        {/* Input Bar (FIXED) */}
+        <div
+          style={{
+            padding: 12,
+            borderTop: "1px solid #ddd",
+            display: "flex",
+            gap: 8,
+            background: "#fff",
+          }}
+        >
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -155,9 +177,10 @@ export default function HeatAssistant() {
             placeholder="Ask about thermal flows..."
             style={{
               flex: 1,
-              padding: 12,
+              padding: "10px 14px",
               borderRadius: 20,
               border: "1px solid #ccc",
+              outline: "none",
             }}
           />
           <button
@@ -165,8 +188,11 @@ export default function HeatAssistant() {
             style={{
               background: "#d35400",
               color: "#fff",
-              padding: "10px 16px",
+              border: "none",
+              padding: "10px 18px",
               borderRadius: 20,
+              cursor: "pointer",
+              fontWeight: "bold",
             }}
           >
             Send
