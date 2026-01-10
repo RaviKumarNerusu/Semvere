@@ -4,11 +4,11 @@ export async function POST(req: Request) {
   try {
     const { message } = await req.json();
 
-    const apiKey = process.env.GROQ_API_KEY;
+    const API_KEY = process.env.GROQ_API_KEY;
 
-    if (!apiKey) {
+    if (!API_KEY) {
       return NextResponse.json(
-        { reply: "Missing GROQ_API_KEY" },
+        { reply: "❌ Missing GROQ_API_KEY in environment variables." },
         { status: 500 }
       );
     }
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${API_KEY}`,
         },
         body: JSON.stringify({
           model: "llama-3.3-70b-versatile",
@@ -27,36 +27,30 @@ export async function POST(req: Request) {
             {
               role: "system",
               content:
-                "You are a Heat Transfer expert. Explain conduction, convection, radiation, insulation and R-values simply.",
+                "You are a Heat Transfer expert. Explain conduction, convection, radiation, insulation, R-values clearly for students.",
             },
-            {
-              role: "user",
-              content: message,
-            },
+            { role: "user", content: message },
           ],
           temperature: 0.6,
         }),
       }
     );
 
-    if (!groqRes.ok) {
-      const err = await groqRes.text();
+    const data = await groqRes.json();
+
+    if (!data?.choices?.[0]?.message?.content) {
       return NextResponse.json(
-        { reply: "Groq API error", error: err },
+        { reply: "⚠️ No response from Groq API." },
         { status: 500 }
       );
     }
 
-    const data = await groqRes.json();
-
-    const reply =
-      data?.choices?.[0]?.message?.content ??
-      "No response generated.";
-
-    return NextResponse.json({ reply });
+    return NextResponse.json({
+      reply: data.choices[0].message.content,
+    });
   } catch (err) {
     return NextResponse.json(
-      { reply: "Server error" },
+      { reply: "❌ Groq connection error." },
       { status: 500 }
     );
   }
