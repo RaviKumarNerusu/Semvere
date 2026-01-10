@@ -1,17 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { marked } from "marked";
 
 export default function HeatAssistant() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<
-    { role: "user" | "assistant"; text: string }[]
-  >([
+  const [messages, setMessages] = useState([
     {
       role: "assistant",
-      text: "Hi! I'm your Heat Transfer Assistant. How can I help?",
+      text: "Hi! I'm your Heat Transfer Assistant. How can I help with your simulation?",
     },
   ]);
 
@@ -30,8 +28,8 @@ export default function HeatAssistant() {
     const userText = input;
     setInput("");
 
-    setMessages((m) => [
-      ...m,
+    setMessages((prev) => [
+      ...prev,
       { role: "user", text: userText },
       { role: "assistant", text: "Thinking..." },
     ]);
@@ -45,20 +43,20 @@ export default function HeatAssistant() {
 
       const data = await res.json();
 
-      setMessages((m) => {
-        const copy = [...m];
+      setMessages((prev) => {
+        const copy = [...prev];
         copy[copy.length - 1] = {
           role: "assistant",
-          text: data.reply || "No reply",
+          text: data.reply || "No response.",
         };
         return copy;
       });
     } catch {
-      setMessages((m) => {
-        const copy = [...m];
+      setMessages((prev) => {
+        const copy = [...prev];
         copy[copy.length - 1] = {
           role: "assistant",
-          text: "❌ Connection error. Try again.",
+          text: "❌ Connection error. Please try again.",
         };
         return copy;
       });
@@ -74,11 +72,12 @@ export default function HeatAssistant() {
           position: "fixed",
           bottom: 20,
           right: 20,
-          width: 64,
-          height: 64,
+          width: 60,
+          height: 60,
           borderRadius: "50%",
           border: "2px solid #d35400",
           background: "#fff",
+          boxShadow: "0 8px 20px rgba(0,0,0,.25)",
           cursor: "pointer",
           zIndex: 9999,
         }}
@@ -91,12 +90,12 @@ export default function HeatAssistant() {
         style={{
           position: "fixed",
           top: 0,
-          right: open ? 0 : "-360px",
+          right: open ? 0 : "-380px",
           width: 360,
           height: "100vh",
           background: "#fff",
-          boxShadow: "-10px 0 25px rgba(0,0,0,0.2)",
-          transition: "0.3s",
+          boxShadow: "-10px 0 25px rgba(0,0,0,.2)",
+          transition: "right .3s ease",
           display: "flex",
           flexDirection: "column",
           zIndex: 10000,
@@ -113,11 +112,8 @@ export default function HeatAssistant() {
             justifyContent: "space-between",
           }}
         >
-          Thermal Guide AI
-          <span
-            style={{ cursor: "pointer" }}
-            onClick={() => setOpen(false)}
-          >
+          <span>Thermal Guide AI</span>
+          <span style={{ cursor: "pointer" }} onClick={() => setOpen(false)}>
             ✕
           </span>
         </div>
@@ -127,41 +123,36 @@ export default function HeatAssistant() {
           ref={scrollRef}
           style={{
             flex: 1,
-            padding: 12,
+            padding: 14,
             overflowY: "auto",
             background: "#fafafa",
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
           }}
         >
           {messages.map((m, i) => (
             <div
               key={i}
               style={{
+                marginBottom: 10,
                 maxWidth: "85%",
-                alignSelf:
-                  m.role === "user" ? "flex-end" : "flex-start",
-                background:
-                  m.role === "user" ? "#e67e22" : "#f1f1f1",
-                color: m.role === "user" ? "#fff" : "#000",
                 padding: 10,
                 borderRadius: 12,
+                background: m.role === "user" ? "#e67e22" : "#f1f1f1",
+                color: m.role === "user" ? "#fff" : "#000",
+                alignSelf: m.role === "user" ? "flex-end" : "flex-start",
               }}
-              dangerouslySetInnerHTML={{
-                __html: marked.parse(m.text),
-              }}
+              dangerouslySetInnerHTML={{ __html: marked.parse(m.text) }}
             />
           ))}
         </div>
 
-        {/* Input */}
+        {/* Input Bar */}
         <div
           style={{
-            padding: 10,
+            padding: 12,
             borderTop: "1px solid #ddd",
             display: "flex",
             gap: 8,
+            background: "#fff",
           }}
         >
           <input
@@ -171,9 +162,14 @@ export default function HeatAssistant() {
             placeholder="Ask about heat transfer..."
             style={{
               flex: 1,
-              padding: "10px 14px",
-              borderRadius: 20,
+              height: 42,
+              padding: "0 16px",
+              borderRadius: 21,
               border: "1px solid #ccc",
+              outline: "none",
+              fontSize: 14,
+              color: "#000",
+              backgroundColor: "#fff",
             }}
           />
           <button
@@ -182,9 +178,10 @@ export default function HeatAssistant() {
               background: "#d35400",
               color: "#fff",
               border: "none",
-              padding: "10px 18px",
-              borderRadius: 20,
+              padding: "0 18px",
+              borderRadius: 21,
               cursor: "pointer",
+              fontWeight: "bold",
             }}
           >
             Send
